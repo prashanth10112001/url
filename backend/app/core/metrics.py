@@ -34,3 +34,8 @@ expired_urls_total = Counter(
     "expired_urls_total",
     "Total expired URL accesses"
 )
+
+analytics_events_total = Counter(
+    "analytics_events_total",
+    "Total number of successfully recorded URL clicks"
+)

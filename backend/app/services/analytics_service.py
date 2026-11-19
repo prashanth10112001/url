@@ -4,6 +4,7 @@ from fastapi import Depends
 from app.repositories.url_click_repository import URLClickRepository, get_url_click_repository
 from app.models.url_click_model import URLClick
 from app.logging.logger import get_logger
+from app.core.metrics import analytics_events_total
 
 logger = get_logger(__name__)
 
@@ -37,6 +38,8 @@ class AnalyticsService:
                         user_agent=user_agent,
                         referrer=referrer
                     )
+
+            analytics_events_total.inc()
             logger.info(
                 "CLICK_RECORDED | url_id=%s | ip=%s",
                 url_id,
