@@ -100,6 +100,6 @@ jobs:
               run: |
                 alembic upgrade head
 
-            - name: Run Tests
+            - name: Run Tests With Coverage
               run: |
-                pytest
+                pytest --cov=app --cov-report=term
