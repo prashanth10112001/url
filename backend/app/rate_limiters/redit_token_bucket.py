@@ -5,6 +5,7 @@ from redis import Redis, RedisError
 from app.core.cache import redis_client
 from app.core.config import RATE_LIMIT_CAPACITY, RATE_LIMIT_REFILL_RATE
 from app.logging.logger import get_logger
+from app.core.metrics import rate_limit_exceeded_total
 
 logger = get_logger(__name__)
 
@@ -130,6 +131,7 @@ class RedisTokenBucket:
             )
 
             if not result:
+                rate_limit_exceeded_total.inc()
                 logger.warning(
                     "RATE_LIMIT_EXCEEDED | ip=%s",
                     ip_address

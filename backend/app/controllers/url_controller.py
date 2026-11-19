@@ -12,6 +12,7 @@ from app.rate_limiters.redit_token_bucket import RedisTokenBucket, get_rate_limi
 from app.models.user_model import User
 from app.dependencies.auth import get_current_user, get_optional_user
 from app.services.analytics_service import AnalyticsService, get_analytics_service
+from app.core.metrics import redirects_total
 
 url_controller = APIRouter(
     prefix="",tags=["URL_ROUTER"]
@@ -71,6 +72,7 @@ def retrieve_code(code : str,request:Request , background_tasks:BackgroundTasks 
             referrer=request.headers.get("referer")
         )
 
+        redirects_total.inc()
         
 
         return RedirectResponse(

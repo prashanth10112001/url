@@ -8,6 +8,7 @@ from app.exceptions.url_exceptions import URLAccessDenied, URLExpired, URLNotFou
 from app.models.url_model import URL
 from app.repositories.cache_repositories import CacheRepository, get_cache_repository
 from app.logging.logger import get_logger
+from app.core.metrics import cache_hits_total,cache_misses_total,urls_created_total,expired_urls_total
 
 logger = get_logger(__name__)
 
@@ -24,6 +25,8 @@ class URLService:
         url.short_code = encode(url.id)
     
         self.repository.save(url)
+
+        urls_created_total.inc()
 
         logger.info(
             "URL_CREATED | "
@@ -44,6 +47,8 @@ class URLService:
         if cached_url is not None:
 
             logger.info("CACHE HIT | code=%s", code)
+
+            cache_hits_total.inc()
              
             return URL(
                   id=cached_url["id"],
@@ -52,6 +57,8 @@ class URLService:
              )
 
         logger.info("CACHE MISS | code=%s", code)
+
+        cache_misses_total.inc()
 
 
         id = int(decode(code))
@@ -63,6 +70,8 @@ class URLService:
         now = datetime.now(timezone.utc)
         
         if (url.expires_at and now >= url.expires_at):
+
+            expired_urls_total.inc()
             raise URLExpired()
 
         ttl = 300
