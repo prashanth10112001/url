@@ -1,12 +1,12 @@
 import json
 import time
-import logging
 
 from redis import Redis, RedisError
 from app.core.cache import redis_client
 from app.core.config import RATE_LIMIT_CAPACITY, RATE_LIMIT_REFILL_RATE
+from app.logging.logger import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 TOKEN_BUCKET_LUA = """
 local key = KEYS[1]
@@ -128,6 +128,12 @@ class RedisTokenBucket:
                 self.refill_rate,
                 time.time()
             )
+
+            if not result:
+                logger.warning(
+                    "RATE_LIMIT_EXCEEDED | ip=%s",
+                    ip_address
+                )
     
             return bool(result)
         except RedisError:

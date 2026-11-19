@@ -1,10 +1,11 @@
-import logging
+
 from fastapi import Depends
 
 from app.repositories.url_click_repository import URLClickRepository, get_url_click_repository
 from app.models.url_click_model import URLClick
+from app.logging.logger import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 class AnalyticsService:
 
@@ -36,9 +37,16 @@ class AnalyticsService:
                         user_agent=user_agent,
                         referrer=referrer
                     )
+            logger.info(
+                "CLICK_RECORDED | url_id=%s | ip=%s",
+                url_id,
+                ip_address
+            )
         except Exception:
             logger.exception(
-                "Failed to record click"
+                "CLICK_RECORD_FAILED | "
+                "url_id=%s",
+                url_id
             )
              
 

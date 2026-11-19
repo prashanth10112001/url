@@ -7,7 +7,9 @@ from app.repositories.url_repository import URLRepository, get_url_repository
 from app.exceptions.url_exceptions import URLAccessDenied, URLExpired, URLNotFound
 from app.models.url_model import URL
 from app.repositories.cache_repositories import CacheRepository, get_cache_repository
+from app.logging.logger import get_logger
 
+logger = get_logger(__name__)
 
 class URLService:
 
@@ -22,6 +24,16 @@ class URLService:
         url.short_code = encode(url.id)
     
         self.repository.save(url)
+
+        logger.info(
+            "URL_CREATED | "
+            "url_id=%s | "
+            "code=%s | "
+            "user_id=%s",
+            url.id,
+            url.short_code,
+            user_id
+        )
     
         return url.short_code
 
@@ -30,12 +42,16 @@ class URLService:
         cached_url = self.cache_repository.get(code)
 
         if cached_url is not None:
-             return URL(
+
+            logger.info("CACHE HIT | code=%s", code)
+             
+            return URL(
                   id=cached_url["id"],
                   long_url=cached_url["long_url"],
                   short_code=code
              )
 
+        logger.info("CACHE MISS | code=%s", code)
 
 
         id = int(decode(code))
@@ -93,6 +109,16 @@ class URLService:
         self.repository.delete_url(url)
 
         self.cache_repository.delete(code)
+
+        logger.info(
+            "URL_DELETED | "
+            "url_id=%s | "
+            "code=%s | "
+            "user_id=%s",
+            url.id,
+            code,
+            current_user_id
+        )
 
     def update_expiration(
         self,
