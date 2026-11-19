@@ -1,0 +1,97 @@
+url-shortener/
+
+├── app/
+│
+│   ├── main.py
+│   ├── config.py
+│   ├── dependencies.py
+│
+│   ├── api/
+│   │   ├── routes/
+│   │   │   ├── url_routes.py
+│   │   │   ├── auth_routes.py
+│   │   │   └── analytics_routes.py
+│   │   │
+│   │   └── router.py
+│
+│   ├── schemas/
+│   │   ├── url.py
+│   │   ├── auth.py
+│   │   └── analytics.py
+│
+│   ├── models/
+│   │   ├── url.py
+│   │   ├── user.py
+│   │   └── click.py
+│
+│   ├── services/
+│   │   ├── url_service.py
+│   │   ├── auth_service.py
+│   │   ├── analytics_service.py
+│   │   ├── cache_service.py
+│   │   └── rate_limiter_service.py
+│
+│   ├── repositories/
+│   │   ├── url_repository.py
+│   │   ├── user_repository.py
+│   │   └── click_repository.py
+│
+│   ├── db/
+│   │   ├── database.py
+│   │   ├── session.py
+│   │   └── base.py
+│
+│   ├── middleware/
+│   │   ├── rate_limiter.py
+│   │   ├── logging.py
+│   │   └── auth.py
+│
+│   ├── cache/
+│   │   └── redis_client.py
+│
+│   ├── utils/
+│   │   ├── base62.py
+│   │   ├── validators.py
+│   │   ├── constants.py
+│   │   └── helpers.py
+│
+│   ├── workers/
+│   │   ├── celery_app.py
+│   │   ├── click_processor.py
+│   │   └── cleanup_jobs.py
+│
+│   └── exceptions/
+│       ├── custom_exceptions.py
+│       └── handlers.py
+│
+├── migrations/
+│   ├── versions/
+│   └── env.py
+│
+├── tests/
+│
+│   ├── unit/
+│   │   ├── test_base62.py
+│   │   ├── test_url_service.py
+│   │   └── test_rate_limiter.py
+│
+│   ├── integration/
+│   │   ├── test_shorten.py
+│   │   ├── test_redirect.py
+│   │   └── test_auth.py
+│
+│   └── conftest.py
+│
+├── docker/
+│   ├── Dockerfile
+│   └── docker-compose.yml
+│
+├── scripts/
+│   ├── seed_data.py
+│   └── create_admin.py
+│
+├── .env
+├── .env.example
+├── requirements.txt
+├── README.md
+└── alembic.ini

@@ -1,0 +1,75 @@
+# Python
+__pycache__/
+*.pyc
+
+# Virtual env
+venv/
+
+# Environment files
+.env
+.env.test
+
+# Coverage
+.coverage
+htmlcov/
+
+# Pytest
+.pytest_cache/
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# Environment variables & secrets
+.env
+.env.*
+!.env.example
+
+# Testing & coverage artifacts (e.g., htmlcov generated in backend/)
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+*.cover
+
+# mypy / ruff / linter caches
+.mypy_cache/
+.ruff_cache/
+
+# Local SQLite / database / volume dumps (if created locally)
+*.db
+*.sqlite
+*.sqlite3
+
+# Frontend (for future 1_url_shortener/frontend/)
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+frontend/.next/
+frontend/.vite/
+frontend/.env*.local
+frontend/*.tsbuildinfo
+
+# OS & editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo

@@ -1,0 +1,765 @@
+That's actually the best approach.
+
+Most people try to build everything at once and get stuck. A real backend engineer builds features incrementally:
+
+API → Business Logic → Database → Cache → Rate Limiter → Auth → Analytics → Deployment
+
+For your URL Shortener project, I would follow this roadmap.
+
+Phase 0: Project Setup
+Goal
+
+Create a clean FastAPI structure.
+
+Deliverables
+url-shortener/
+
+├── app/
+│   ├── api/
+│   ├── services/
+│   ├── models/
+│   ├── repositories/
+│   ├── utils/
+│   └── main.py
+│
+├── tests/
+├── requirements.txt
+└── README.md
+
+Learn
+FastAPI basics
+Routers
+Dependency Injection
+Pydantic models
+End Result
+uvicorn app.main:app --reload
+
+
+Works successfully.
+
+Phase 1: Basic URL Shortener (No DB)
+Goal
+
+Create your first working URL shortener.
+
+Endpoints
+POST /shorten
+
+GET /{code}
+
+Temporary Storage
+
+Use dictionary.
+
+url_store = {}
+
+
+Example
+
+{
+  "abc123":
+   "https://google.com"
+}
+
+Flow
+Long URL
+   |
+POST /shorten
+   |
+Generate Code
+   |
+Store in Dict
+   |
+Return Code
+
+
+Redirect
+
+GET /abc123
+    |
+Lookup
+    |
+Redirect
+
+Concepts
+Request/Response models
+RedirectResponse
+Status codes
+Deliverable
+POST /shorten
+
+
+returns
+
+{
+  "short_code": "abc123"
+}
+
+
+and redirect works.
+
+Phase 2: Generate Real Short Codes
+Goal
+
+Stop generating random strings.
+
+Implement:
+
+ID -> Base62
+
+Learn
+
+Base conversion.
+
+Create
+utils/base62.py
+
+
+Functions
+
+encode()
+decode()
+
+
+Example
+
+1 -> b
+2 -> c
+61 -> z
+62 -> 10
+
+Deliverable
+encode(1000)
+
+
+returns Base62 string.
+
+Understand the core idea behind Bitly/TinyURL.
+
+Phase 3: Add PostgreSQL
+Goal
+
+Persist URLs.
+
+Install
+postgresql
+sqlalchemy
+alembic
+psycopg
+
+Create Table
+urls
+
+id
+original_url
+short_code
+created_at
+
+Replace
+dict
+
+
+with
+
+PostgreSQL
+
+Repository Layer
+UrlRepository
+
+
+Methods
+
+save()
+
+find_by_short_code()
+
+find_by_id()
+
+Deliverable
+
+Server restart should not lose URLs.
+
+Phase 4: Implement Proper Service Layer
+Goal
+
+Separate business logic.
+
+Structure
+Controller
+    |
+Service
+    |
+Repository
+    |
+Database
+
+Create
+UrlService
+
+
+Responsibilities
+
+create_short_url()
+
+get_original_url()
+
+Deliverable
+
+Thin controllers.
+
+Most logic moves to services.
+
+Phase 5: Dockerize
+Goal
+
+Run locally with one command.
+
+Create
+Dockerfile
+
+docker-compose.yml
+
+
+Services
+
+FastAPI
+
+PostgreSQL
+
+
+Run
+
+docker compose up
+
+Deliverable
+
+Entire backend runs from Docker.
+
+Phase 6: Redis Cache
+Goal
+
+Avoid hitting database on every redirect.
+
+Before
+Redirect
+  |
+Database Lookup
+
+After
+Redirect
+   |
+ Redis
+   |
+Hit ?
+ |    |
+YES  NO
+ |     |
+Return DB
+
+Cache Key
+url:abc123
+
+Value
+https://google.com
+
+Deliverable
+
+Implement Cache-Aside pattern.
+
+Phase 7: URL Expiration
+Goal
+
+Allow temporary links.
+
+Database Changes
+expiry_at
+
+Example
+{
+  "url":"https://google.com",
+  "expiry_days":7
+}
+
+Redirect Logic
+if expired:
+    raise 404
+
+Deliverable
+
+Expired URLs stop redirecting.
+
+Phase 8: Rate Limiter
+Goal
+
+Prevent abuse.
+
+First Version
+
+In-memory.
+
+Algorithm
+
+Token Bucket.
+
+capacity = 100
+
+refill = 10/sec
+
+Flow
+Request
+   |
+Token?
+   |
+Yes -> Process
+No  -> 429
+
+Deliverable
+
+Limit by IP Address.
+
+Phase 9: Move Rate Limiter to Redis
+Why
+
+Current limiter breaks when:
+
+Server A
+
+Server B
+
+Server C
+
+
+Each server has different memory.
+
+New Design
+Client
+   |
+FastAPI
+   |
+Redis
+   |
+Token Bucket
+
+Deliverable
+
+Distributed rate limiting.
+
+Phase 10: Authentication
+Goal
+
+Users own URLs.
+
+Use
+Supabase Auth
+
+
+since you're already exploring it.
+
+Flow
+Login
+ |
+JWT
+ |
+FastAPI
+ |
+Validate
+
+Database
+user_id
+
+
+added to URLs table.
+
+Deliverable
+
+Each user sees only their links.
+
+Phase 11: Analytics
+Goal
+
+Track usage.
+
+Create Table
+url_clicks
+
+
+Columns:
+
+id
+short_code
+timestamp
+ip
+country
+user_agent
+
+On Redirect
+Save Click Event
+
+Metrics
+Total Clicks
+
+Daily Clicks
+
+Top URLs
+
+Deliverable
+
+Analytics APIs.
+
+Phase 12: Background Jobs
+Goal
+
+Move non-critical tasks out of request flow.
+
+Tasks
+Save analytics
+
+Clean expired URLs
+
+Send reports
+
+Tools
+Celery
+Redis Queue
+
+Deliverable
+
+Redirect API remains fast.
+
+Phase 13: Testing
+Unit Tests
+Base62
+
+UrlService
+
+RateLimiter
+
+Integration Tests
+POST /shorten
+
+GET /redirect
+
+Tool
+pytest
+
+
+Target
+
+80% coverage
+
+Phase 14: Monitoring & Logging
+Add
+Structured Logs
+
+Prometheus
+
+Grafana
+
+
+Metrics
+
+Request Count
+
+Response Time
+
+Errors
+
+Rate Limit Hits
+
+Phase 15: Production Deployment
+Deploy
+
+Frontend
+
+Vercel
+
+
+Backend
+
+Railway / Render
+
+
+Infrastructure
+
+FastAPI
+Postgres
+Redis
+
+Environment Variables
+DATABASE_URL
+
+REDIS_URL
+
+JWT_SECRET
+
+Final Architecture You Reach
+                 Next.js
+
+                     |
+                     |
+                     v
+
+                FastAPI
+
+                     |
+         +-----------+-----------+
+         |                       |
+         v                       v
+
+      Redis                 PostgreSQL
+
+         |                       |
+
+    Rate Limiter           URL Storage
+    URL Cache              Analytics
+
+         |
+         v
+
+      Celery Workers
+
+Milestone Order (Don't Skip)
+1. FastAPI Setup
+2. In-Memory Shortener
+3. Base62 Encoder
+4. PostgreSQL
+5. Service/Repository Pattern
+6. Docker
+7. Redis Cache
+8. URL Expiry
+9. In-Memory Rate Limiter
+10. Redis Rate Limiter
+11. Supabase Auth
+12. Analytics
+13. Background Workers
+14. Testing
+15. Deployment
+
+
+This progression mirrors how the feature would evolve in a real company and gives you a strong story for interviews because each phase introduces one new backend concept without overwhelming you.
+
+
+----------------------------------------------------------------------------------------------------
+
+
+Looking at what you've already completed, I'd stop adding features for a moment and think in terms of backend engineering maturity.
+
+You now have:
+
+✅ URL Shortening
+✅ PostgreSQL
+✅ Alembic
+✅ SQLModel
+✅ Redis Cache
+✅ Distributed Rate Limiter
+✅ JWT Authentication
+✅ URL Ownership
+✅ Analytics
+✅ Background Tasks
+✅ URL Expiration
+✅ URL Deletion
+
+
+The biggest gap now is not features.
+
+It's testing, observability, and deployment readiness.
+
+Option 1 (My Recommendation): Testing
+
+Add:
+
+pytest
+
+
+and create:
+
+tests/
+├── test_auth.py
+├── test_urls.py
+├── test_redirect.py
+├── test_rate_limiter.py
+└── test_analytics.py
+
+
+Test cases:
+
+✅ Register User
+
+✅ Login User
+
+✅ Create URL
+
+✅ Redirect URL
+
+✅ Expired URL
+
+✅ Delete URL
+
+✅ Update Expiration
+
+✅ Analytics Tracking
+
+
+A project with tests immediately feels much more professional.
+
+Option 2: Dockerize Everything
+
+Current:
+
+FastAPI
+Postgres
+Redis
+
+
+Probably started separately.
+
+Move to:
+
+services:
+  api:
+  postgres:
+  redis:
+
+
+using:
+
+docker-compose.yml
+
+
+Then anyone can run:
+
+docker compose up
+
+
+and get the whole application.
+
+Option 3: OpenAPI / API Documentation
+
+Your API has become fairly large:
+
+/auth/register
+/auth/login
+/auth/me
+
+/api/shorten
+/api/my-urls
+
+/api/stats/{code}
+
+PATCH expiration
+
+DELETE url
+
+
+Now is a good time to ensure:
+
+summary=
+description=
+response_model=
+
+
+are properly defined.
+
+Swagger becomes beautiful.
+
+Option 4: Analytics Enhancements
+
+You completed the required analytics.
+
+Optional upgrades:
+
+unique_visitors
+
+
+using:
+
+COUNT(DISTINCT ip_address)
+
+last_clicked_at
+
+
+using:
+
+MAX(clicked_at)
+
+recent_clicks
+
+
+using:
+
+LIMIT 10
+
+Option 5: Admin Dashboard
+
+Create:
+
+/admin/stats
+
+
+to see:
+
+Total Users
+Total URLs
+Total Clicks
+Top URLs
+
+
+This teaches aggregate queries.
+
+Option 6: Custom Alias
+
+Very common URL-shortener feature.
+
+Instead of:
+
+localhost:8000/aBc123
+
+
+user can choose:
+
+localhost:8000/my-portfolio
+
+
+This introduces:
+
+Uniqueness Validation
+Reserved Names
+Ownership Checks
+
+
+A good interview feature.
+
+Option 7: Deployment
+
+Deploy:
+
+FastAPI → Railway / Render / Azure App Service
+PostgreSQL → Neon / Railway
+Redis → Upstash / Railway
+
+Then:
+
+Live URL Shortener
+
+
+becomes part of your portfolio.
+
+What I Would Personally Do Next
+
+If this is a learning/project portfolio application:
+
+1. Testing
+2. Docker Compose
+3. Deployment
+
+
+before adding more features.
+
+Because feature-wise, your URL shortener is already quite complete.
+
+If this is an educational roadmap and you still want another feature phase, then:
+
+Custom Aliases
+
+
+would be my next choice. It adds practical value without dramatically increasing complexity.

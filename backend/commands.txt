@@ -1,0 +1,48 @@
+- docker exec -it url-shortener-redis redis-cli
+
+- docker compose ps
+
+- docker compose up -d
+
+- docker compose down
+
+- docker compose down -v
+
+- docker exec -it url-shortener-db psql -U user -d urlshortener
+
+- alembic revision --autogenerate -m "add expires_at to the urls"
+
+- alembic upgrade head
+
+- docker exec -it redis redis-cli PING
+
+- docker exec -it redis redis-cli FLUSHDB
+
+- docker exec -it redis redis-cli GET url:H
+
+- docker exec -it redis redis-cli then do > KEYS * or SCAN 0 MATCH url:* or EXIT or TTL url:H
+
+
+Delete specific keys (in lua script) in redis like (eg. keys start with rq:)
+- EVAL "local keys = redis.call('keys', ARGV[1]) for i=1,#keys,5000 do redis.call('del', unpack(keys, i, math.min(i+4999, #keys))) end return #keys" 0 "rq:*"
+
+
+Tests
+- pytest.ini
+- pytest
+- pytest -v
+- pytest --cov=app
+- pytest --cov=app --cov-report=html
+- pytest --cov=app --cov-report=term-missing
+- pytest tests/integration/test_delete.py -v
+
+Tests Final Order
+- pytest -v
+- pytest --cov=app --cov-report=term-missing
+- pytest --cov=app --cov-report=html
+
+
+To copy your whole code base in txt file in git bash
+-----------------------------------------------------------------------------------------
+find . -type d \( -name 'venv' -o -name '.pytest_cache' -o -name '__pycache__' -o -name '.?*' \) -prune -o -type f ! -name 'combined_code.txt' ! -name 'folderStructure.txt' ! -name 'commands.txt' ! -name 'copilot_phases.txt' ! -name 'remaining_phases.md' ! -name '.?*' -exec head -n 10000 {} + > combined_code.txt
+-----------------------------------------------------------------------------------------
