@@ -4,7 +4,9 @@ from sqlmodel import Session, create_engine
 
 engine = create_engine(
     DATABASE_URL,
-    echo=True
+    echo=True,
+    pool_pre_ping=True,
+    pool_recycle=300
 )
 
 def get_session():
